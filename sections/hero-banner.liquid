@@ -1,0 +1,121 @@
+{% comment %}
+  Chad GPT Store Hero Banner Section
+{% endcomment %}
+
+<section class="hero section" id="home">
+  <div class="hero__container container">
+    <div class="hero__content">
+      <h1 class="hero__title">
+        {% if section.settings.heading != blank %}
+          {{ section.settings.heading | replace: '[highlight]', '<span class="gradient-text">' | replace: '[/highlight]', '</span>' }}
+        {% else %}
+          The Most <span class="gradient-text">Badass</span> Shopping Experience
+        {% endif %}
+      </h1>
+      
+      {% if section.settings.text != blank %}
+        <p class="hero__description">{{ section.settings.text }}</p>
+      {% else %}
+        <p class="hero__description">
+          Discover cutting-edge products with insanely cool functionality. 
+          Chad GPT brings you the future of e-commerce.
+        </p>
+      {% endif %}
+      
+      <div class="hero__buttons">
+        {% if section.settings.button_label_1 != blank %}
+          <a href="{{ section.settings.button_link_1 | default: collections.all.url }}" class="btn btn--primary">
+            {{ section.settings.button_label_1 }}
+          </a>
+        {% endif %}
+        
+        {% if section.settings.button_label_2 != blank %}
+          <a href="{{ section.settings.button_link_2 | default: '#about' }}" class="btn btn--secondary">
+            {{ section.settings.button_label_2 }}
+          </a>
+        {% endif %}
+      </div>
+    </div>
+    
+    <div class="hero__image">
+      {% if section.settings.image != blank %}
+        {{ section.settings.image | image_url: width: 800 | image_tag: 
+          loading: 'lazy',
+          alt: section.settings.image.alt | escape,
+          class: 'hero__visual-image'
+        }}
+      {% else %}
+        <div class="hero__visual">
+          <div class="floating-element floating-element--1"></div>
+          <div class="floating-element floating-element--2"></div>
+          <div class="floating-element floating-element--3"></div>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Hero Banner",
+  "tag": "section",
+  "class": "section",
+  "settings": [
+    {
+      "type": "inline_richtext",
+      "id": "heading",
+      "default": "The Most [highlight]Badass[/highlight] Shopping Experience",
+      "label": "Heading",
+      "info": "Use [highlight] and [/highlight] to highlight text"
+    },
+    {
+      "type": "richtext",
+      "id": "text",
+      "default": "<p>Discover cutting-edge products with insanely cool functionality. Chad GPT brings you the future of e-commerce.</p>",
+      "label": "Description"
+    },
+    {
+      "type": "text",
+      "id": "button_label_1",
+      "default": "Shop Now",
+      "label": "First button label"
+    },
+    {
+      "type": "url",
+      "id": "button_link_1",
+      "label": "First button link"
+    },
+    {
+      "type": "text", 
+      "id": "button_label_2",
+      "default": "Learn More",
+      "label": "Second button label"
+    },
+    {
+      "type": "url",
+      "id": "button_link_2",
+      "label": "Second button link"
+    },
+    {
+      "type": "image_picker",
+      "id": "image",
+      "label": "Hero image"
+    },
+    {
+      "type": "header",
+      "content": "Colors"
+    },
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "Color scheme",
+      "default": "scheme-1"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Hero Banner"
+    }
+  ]
+}
+{% endschema %}
