@@ -1,0 +1,226 @@
+{% comment %}
+  Chad GPT Store Featured Collection Section
+{% endcomment %}
+
+{%- liquid
+  assign products_to_display = section.settings.collection.products_count | at_most: section.settings.products_to_show
+-%}
+
+<section class="products section" id="products">
+  <div class="container">
+    {% if section.settings.heading != blank %}
+      <h2 class="section__title">{{ section.settings.heading }}</h2>
+    {% endif %}
+    
+    {% if section.settings.description != blank %}
+      <p class="section__subtitle">{{ section.settings.description }}</p>
+    {% endif %}
+    
+    {% if section.settings.enable_filtering %}
+      <div class="products__filters">
+        <button class="filter__btn active" data-filter="all">All</button>
+        {% for tag in section.settings.collection.all_tags limit: 4 %}
+          <button class="filter__btn" data-filter="{{ tag | handle }}">{{ tag }}</button>
+        {% endfor %}
+      </div>
+    {% endif %}
+    
+    <div class="products__grid" id="products-grid">
+      {% if section.settings.collection != blank %}
+        {% for product in section.settings.collection.products limit: section.settings.products_to_show %}
+          <div class="product__card" data-product-id="{{ product.id }}" data-category="{{ product.tags.first | handle }}">
+            <div class="product__image">
+              {% if product.featured_media %}
+                {{ product.featured_media | image_url: width: 400 | image_tag: 
+                  loading: 'lazy',
+                  alt: product.featured_media.alt | escape,
+                  class: 'product__img'
+                }}
+              {% else %}
+                <span class="product__emoji">🎁</span>
+              {% endif %}
+            </div>
+            
+            <h3 class="product__title">{{ product.title }}</h3>
+            
+            {% if product.description != blank %}
+              <p class="product__description">{{ product.description | strip_html | truncate: 100 }}</p>
+            {% endif %}
+            
+            {% if section.settings.show_rating %}
+              <div class="product__rating">
+                {% comment %} Shopify doesn't have built-in ratings, so we'll use static stars {% endcomment %}
+                ⭐⭐⭐⭐⭐
+              </div>
+            {% endif %}
+            
+            <div class="product__price">
+              {% render 'price', product: product, use_variant: true, show_badges: true %}
+            </div>
+            
+            <div class="product__actions">
+              {% if product.available %}
+                <button class="btn btn--primary btn--small" 
+                        data-product-id="{{ product.id }}" 
+                        data-variant-id="{{ product.selected_or_first_available_variant.id }}"
+                        onclick="addToCart({{ product.selected_or_first_available_variant.id }})">
+                  {{ 'products.product.add_to_cart' | t }}
+                </button>
+              {% else %}
+                <button class="btn btn--primary btn--small" disabled>
+                  {{ 'products.product.sold_out' | t }}
+                </button>
+              {% endif %}
+              
+              <a href="{{ product.url }}" class="btn btn--secondary btn--small">
+                Quick View
+              </a>
+            </div>
+          </div>
+        {% endfor %}
+      {% else %}
+        {% comment %} Show placeholder products when no collection is selected {% endcomment %}
+        {% for i in (1..section.settings.products_to_show) %}
+          <div class="product__card">
+            <div class="product__image">
+              {{ 'product-' | append: i | placeholder_svg_tag: 'placeholder-svg' }}
+            </div>
+            <h3 class="product__title">Example Product {{ i }}</h3>
+            <p class="product__description">This is an example product description.</p>
+            <div class="product__rating">⭐⭐⭐⭐⭐</div>
+            <div class="product__price">{{ 99.99 | money }}</div>
+            <div class="product__actions">
+              <button class="btn btn--primary btn--small">Add to Cart</button>
+              <button class="btn btn--secondary btn--small">Quick View</button>
+            </div>
+          </div>
+        {% endfor %}
+      {% endif %}
+    </div>
+    
+    {% if section.settings.show_view_all and section.settings.collection != blank %}
+      <div class="collection__view-all center">
+        <a href="{{ section.settings.collection.url }}" class="btn btn--primary">
+          {{ section.settings.view_all_label }}
+        </a>
+      </div>
+    {% endif %}
+  </div>
+</section>
+
+<script>
+  // Add to cart functionality for Shopify
+  function addToCart(variantId) {
+    fetch('/cart/add.js', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({
+        id: variantId,
+        quantity: 1
+      })
+    })
+    .then(response => response.json())
+    .then(data => {
+      // Trigger cart update
+      document.body.dispatchEvent(new CustomEvent('cart:refresh'));
+      
+      // Show success notification
+      if (window.store && window.store.showNotification) {
+        window.store.showNotification('Product added to cart!', 'success');
+      }
+    })
+    .catch(error => {
+      console.error('Error adding to cart:', error);
+      if (window.store && window.store.showNotification) {
+        window.store.showNotification('Error adding to cart', 'error');
+      }
+    });
+  }
+</script>
+
+{% schema %}
+{
+  "name": "Featured collection",
+  "tag": "section",
+  "class": "section",
+  "settings": [
+    {
+      "type": "inline_richtext",
+      "id": "heading",
+      "default": "Featured Products",
+      "label": "Heading"
+    },
+    {
+      "type": "richtext",
+      "id": "description",
+      "default": "<p>Cutting-edge items that will blow your mind</p>",
+      "label": "Description"
+    },
+    {
+      "type": "collection",
+      "id": "collection",
+      "label": "Collection"
+    },
+    {
+      "type": "range",
+      "id": "products_to_show",
+      "min": 2,
+      "max": 25,
+      "step": 1,
+      "default": 8,
+      "label": "Maximum products to show"
+    },
+    {
+      "type": "range",
+      "id": "columns_desktop",
+      "min": 1,
+      "max": 5,
+      "step": 1,
+      "default": 4,
+      "label": "Number of columns on desktop"
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_filtering",
+      "default": true,
+      "label": "Enable product filtering by tags"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_rating",
+      "default": true,
+      "label": "Show product rating"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_view_all",
+      "default": true,
+      "label": "Show 'View all' button"
+    },
+    {
+      "type": "text",
+      "id": "view_all_label",
+      "default": "View all products",
+      "label": "View all button label"
+    },
+    {
+      "type": "header",
+      "content": "Colors"
+    },
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "Color scheme",
+      "default": "scheme-1"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Featured collection"
+    }
+  ]
+}
+{% endschema %}
